@@ -1,9 +1,9 @@
-# \<Project Name\> Scrum Team
+# Team 8 Scrum Team
 ## Product Owner
-\<Team Member Name\>
+Dominic Fida
 ## Scrum Master
-\<Team Member Name\>
+Harsh Bhadania
 ## Developers
-- \<Team Member Name\>
-- \<Team Member Name\>
-- \<Team Member Name\>
+- Timothy Zhytkou
+- Justin Borishkevich
+- Andra Buchan
