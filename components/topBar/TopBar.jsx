@@ -1,25 +1,33 @@
 import React from "react";
 import { AppBar, Toolbar, Typography, Box } from "@mui/material";
+import fetchModel from "../../lib/fetchModelData";
 import "./TopBar.css";
 
 class TopBar extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      users: window.models.userListModel(), // List of users
+      users: [],
+      version: "",
     };
   }
 
-  // This function takes the current user ID and returns the name of the user
+  componentDidMount() {
+    fetchModel("/user/list").then((response) => {
+      this.setState({ users: response.data });
+    });
+
+    fetchModel("/test/info").then((response) => {
+      this.setState({ version: response.data.__v });
+    });
+  }
+
   userIDtoName() {
     const id = this.props.currentUser;
     const user = this.state.users.find((u) => u._id === id);
-    return user
-      ? `${user.first_name} ${user.last_name}`
-      : "Please Select a User";
+    return user ? `${user.first_name} ${user.last_name}` : "Please Select a User";
   }
 
-  // This function returns the appropriate text based on the display context
   displayContextToText() {
     const userName = this.userIDtoName();
     if (this.props.displayType === 0) {
@@ -37,10 +45,13 @@ class TopBar extends React.Component {
         <AppBar className="topbar-appBar">
           <Toolbar>
             <Typography variant="h5" color="inherit" sx={{ flexGrow: 1 }}>
-              Current User: {this.userIDtoName()}
+              Current User: Group 8
             </Typography>
             <Typography variant="h5" color="inherit">
               {this.displayContextToText()}
+            </Typography>
+            <Typography variant="caption" color="inherit" sx={{ marginLeft: 2 }}>
+              Version: {this.state.version}
             </Typography>
           </Toolbar>
         </AppBar>
