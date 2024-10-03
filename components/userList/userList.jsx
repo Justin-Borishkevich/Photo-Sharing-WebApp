@@ -1,14 +1,21 @@
 import React from "react";
 import { Button, Divider, List, ListItem } from "@mui/material";
 import { Link } from "react-router-dom";
+import fetchModel from "../../lib/fetchModelData";
 import "./userList.css";
 
 class UserList extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      users: window.models.userListModel(), // List of users
+      users: [],
     };
+  }
+
+  componentDidMount() {
+    fetchModel("/user/list").then((response) => {
+      this.setState({ users: response.data });
+    });
   }
 
   render() {

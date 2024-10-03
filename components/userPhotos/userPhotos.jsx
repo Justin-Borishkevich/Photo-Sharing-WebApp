@@ -1,39 +1,33 @@
 import React from "react";
 import { Typography, Divider } from "@mui/material";
 import { Link } from "react-router-dom";
+import fetchModel from "../../lib/fetchModelData"; // Import fetchModel
 import "./userPhotos.css";
 
 class UserPhotos extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      photos: null, // Initialize state to store photos
+      photos: null,
     };
   }
 
   componentDidMount() {
-    this.props.setDisplayType(); // Set display type to 1 (User Photos view)
-
+    this.props.setDisplayType();
     const userId = this.props.match.params.userId;
-    const photos = window.models.photoOfUserModel(userId);
 
-    // Debugging: Check userId and photos in componentDidMount
-    console.log("User ID (componentDidMount):", userId);
-    console.log("Photos for user (componentDidMount):", photos);
-
-    // Update state with the photos array
-    this.setState({ photos });
+    fetchModel(`/photosOfUser/${userId}`).then((response) => {
+      this.setState({ photos: response.data });
+    });
   }
 
   render() {
     const { photos } = this.state;
 
-    // If photos are not loaded yet, render a loading message
     if (!photos) {
       return <Typography variant="body1">Loading photos...</Typography>;
     }
 
-    // If photos is an empty array, show no photos message
     if (photos.length === 0) {
       return (
         <Typography variant="body1">
@@ -42,7 +36,6 @@ class UserPhotos extends React.Component {
       );
     }
 
-    // Render photos once they are loaded and not empty
     return (
       <div>
         {photos.map((photo) => (
