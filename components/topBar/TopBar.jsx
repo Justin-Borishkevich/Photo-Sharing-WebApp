@@ -45,7 +45,7 @@ class TopBar extends React.Component {
         <AppBar className="topbar-appBar">
           <Toolbar>
             <Typography variant="h5" color="inherit" sx={{ flexGrow: 1 }}>
-              Current User: {this.userIDtoName()}
+              Current User: Group 8
             </Typography>
             <Typography variant="h5" color="inherit">
               {this.displayContextToText()}
