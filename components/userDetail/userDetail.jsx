@@ -22,6 +22,17 @@ class UserDetail extends React.Component {
     });
   }
 
+  componentDidUpdate(prevProps) {
+    // If the userId has changed, re-fetch the user data
+    const userId = this.props.match.params.userId;
+
+    if (prevProps.match.params.userId !== this.props.match.params.userId) {
+      fetchModel(`/user/${userId}`).then((response) => {
+        this.setState({ user: response.data });
+      });
+    }
+  }
+
   render() {
     const { user } = this.state;
 
