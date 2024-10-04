@@ -1,7 +1,7 @@
 import React from "react";
 import { Typography, Divider } from "@mui/material";
 import { Link } from "react-router-dom";
-import fetchModel from "../../lib/fetchModelData"; // Import fetchModel
+import fetchModel from "../../lib/fetchModelData";
 import "./userPhotos.css";
 
 class UserPhotos extends React.Component {
@@ -41,7 +41,7 @@ class UserPhotos extends React.Component {
         {photos.map((photo) => (
           <div key={photo._id} className="photo-container">
             <Typography variant="h6">{photo.date_time}</Typography>
-            <img src={`/images/${photo.file_name}`} alt="User's Photo" />
+            <img src={`/images/${photo.file_name}`} />
             <div className="comments">
               {photo.comments &&
                 photo.comments.map((comment) => (

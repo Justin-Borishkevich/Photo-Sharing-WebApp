@@ -16,7 +16,6 @@ class UserDetail extends React.Component {
     this.props.setDisplayType();
     const userId = this.props.match.params.userId;
 
-    // Fetch user data
     fetchModel(`/user/${userId}`).then((response) => {
       this.setState({ user: response.data });
     });
