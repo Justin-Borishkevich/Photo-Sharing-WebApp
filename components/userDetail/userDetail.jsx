@@ -1,7 +1,7 @@
 import React from "react";
 import { Typography, Button } from "@mui/material";
 import { Link } from "react-router-dom";
-import fetchModel from "../../lib/fetchModelData";
+import axios from "axios"; // Replace fetchModel import
 import "./userDetail.css";
 
 class UserDetail extends React.Component {
@@ -16,17 +16,15 @@ class UserDetail extends React.Component {
     this.props.setDisplayType();
     const userId = this.props.match.params.userId;
 
-    fetchModel(`/user/${userId}`).then((response) => {
+    axios.get(`/user/${userId}`).then((response) => {
       this.setState({ user: response.data });
     });
   }
 
   componentDidUpdate(prevProps) {
-    // If the userId has changed, re-fetch the user data
     const userId = this.props.match.params.userId;
-
     if (prevProps.match.params.userId !== this.props.match.params.userId) {
-      fetchModel(`/user/${userId}`).then((response) => {
+      axios.get(`/user/${userId}`).then((response) => {
         this.setState({ user: response.data });
       });
     }
@@ -34,7 +32,6 @@ class UserDetail extends React.Component {
 
   render() {
     const { user } = this.state;
-
     if (!user) {
       return <Typography variant="body1">Loading user details...</Typography>;
     }

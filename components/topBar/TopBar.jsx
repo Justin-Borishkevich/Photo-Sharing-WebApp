@@ -1,6 +1,6 @@
 import React from "react";
 import { AppBar, Toolbar, Typography, Box } from "@mui/material";
-import fetchModel from "../../lib/fetchModelData";
+import axios from "axios"; // Replace fetchModel import
 import "./TopBar.css";
 
 class TopBar extends React.Component {
@@ -13,11 +13,11 @@ class TopBar extends React.Component {
   }
 
   componentDidMount() {
-    fetchModel("/user/list").then((response) => {
+    axios.get("/user/list").then((response) => {
       this.setState({ users: response.data });
     });
 
-    fetchModel("/test/info").then((response) => {
+    axios.get("/test/info").then((response) => {
       this.setState({ version: response.data.__v });
     });
   }
@@ -25,7 +25,9 @@ class TopBar extends React.Component {
   userIDtoName() {
     const id = this.props.currentUser;
     const user = this.state.users.find((u) => u._id === id);
-    return user ? `${user.first_name} ${user.last_name}` : "Please Select a User";
+    return user
+      ? `${user.first_name} ${user.last_name}`
+      : "Please Select a User";
   }
 
   displayContextToText() {
@@ -50,7 +52,11 @@ class TopBar extends React.Component {
             <Typography variant="h5" color="inherit">
               {this.displayContextToText()}
             </Typography>
-            <Typography variant="caption" color="inherit" sx={{ marginLeft: 2 }}>
+            <Typography
+              variant="caption"
+              color="inherit"
+              sx={{ marginLeft: 2 }}
+            >
               Version: {this.state.version}
             </Typography>
           </Toolbar>
