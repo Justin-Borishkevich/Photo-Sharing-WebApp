@@ -40,6 +40,20 @@ class TopBar extends React.Component {
     }
     return "Please Select a User";
   }
+  
+  handleUploadButtonClicked = (e) => {
+    e.preventDefault();
+    if (this.uploadInput.files.length > 0) {
+      // Create a DOM form and add the file to it under the name uploadedphoto
+      const domForm = new FormData();
+      domForm.append('uploadedphoto', this.uploadInput.files[0]);
+      axios.post('/images/upload', domForm)
+        .then((res) => {
+          console.log(res);
+        })
+        .catch(err => console.log(`POST ERR: ${err}`));
+    }
+  }
 
   render() {
     return (
@@ -49,6 +63,8 @@ class TopBar extends React.Component {
             <Typography variant="h5" color="inherit" sx={{ flexGrow: 1 }}>
               Current User: Group 8
             </Typography>
+            <input type="file" accept="image/*" ref={(domFileRef) => { this.uploadInput = domFileRef; }} />
+            <button onClick={this.handleUploadButtonClicked}>Upload</button>
             <Typography variant="h5" color="inherit">
               {this.displayContextToText()}
             </Typography>

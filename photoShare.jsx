@@ -39,6 +39,7 @@ class PhotoShare extends React.Component {
                 currentUser={this.state.currentUser}
                 displayType={this.state.displayType}
               />
+              
             </Grid>
             <div className="main-topbar-buffer" />
 
@@ -50,6 +51,7 @@ class PhotoShare extends React.Component {
 
             <Grid item sm={9}>
               <Paper className="main-grid-item">
+              
                 <Switch>
                   <Route
                     path="/users/:userId"

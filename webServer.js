@@ -47,9 +47,12 @@ const SchemaInfo = require("./schema/schemaInfo.js");
 const session = require("express-session");
 const bodyParser = require("body-parser");
 const multer = require("multer");
-
 app.use(session({secret: "secretKey", resave: false, saveUninitialized: false}));
 app.use(bodyParser.json());
+const processFormBody = multer({storage: multer.memoryStorage()}).single('uploadedphoto');
+const fs = require("fs");
+const { time } = require("console");
+
 
 // XXX - Your submission should work without this line. Comment out or delete
 // this line for tests and before submission!
@@ -200,4 +203,43 @@ const server = app.listen(3000, function () {
       " exporting the directory " +
       __dirname
   );
+});
+
+app.post("/images/upload", async (request, response) => {
+  processFormBody(request, response, function (err) {
+    if (err || !request.file) {
+      console.log(`Error: ${err}`);
+      return response.status(400).send("Error uploading file");
+    }
+    // request.file has the following properties of interest:
+    //   fieldname    - Should be 'uploadedphoto' since that is what we sent
+    //   originalname - The name of the file the user uploaded
+    //   mimetype     - The mimetype of the image (e.g., 'image/jpeg',
+    //                  'image/png')
+    //   buffer       - A node Buffer containing the contents of the file
+    //   size         - The size of the file in bytes
+
+    // XXX - Do some validation here.
+    if (request.file.fieldname !== "uploadedphoto") {
+      console.log("Fieldname is not uploadedphoto");
+      return response.status(400).send("Invalid fieldname");
+    }
+    if (request.file.size === 0) {
+      console.log("File size is 0");
+      return response.status(400).send("File size is 0");
+    }
+
+    // We need to create the file in the directory "images" under a unique name.
+    // We make the original file name unique by adding a unique prefix with a
+    // timestamp.
+    const timestamp = new Date().valueOf();
+    const filename = "U" + String(timestamp) + request.file.originalname;
+
+    fs.writeFile("./images/uploaded/" + filename, request.file.buffer, function (err) {
+      if (err) {
+        console.log(`Error writing file: ${err}`);
+        return response.status(500).send("Error saving file");
+      }
+    });
+  });
 });
