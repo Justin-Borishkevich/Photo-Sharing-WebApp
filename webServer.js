@@ -47,12 +47,15 @@ const SchemaInfo = require("./schema/schemaInfo.js");
 const session = require("express-session");
 const bodyParser = require("body-parser");
 const multer = require("multer");
-app.use(session({secret: "secretKey", resave: false, saveUninitialized: false}));
+app.use(
+  session({ secret: "secretKey", resave: false, saveUninitialized: false })
+);
 app.use(bodyParser.json());
-const processFormBody = multer({storage: multer.memoryStorage()}).single('uploadedphoto');
+const processFormBody = multer({ storage: multer.memoryStorage() }).single(
+  "uploadedphoto"
+);
 const fs = require("fs");
 const { time } = require("console");
-
 
 // XXX - Your submission should work without this line. Comment out or delete
 // this line for tests and before submission!
@@ -195,14 +198,48 @@ app.get("/photosOfUser/:id", async (req, res) => {
   }
 });
 
-const server = app.listen(3000, function () {
-  const port = server.address().port;
-  console.log(
-    "Listening at http://localhost:" +
-      port +
-      " exporting the directory " +
-      __dirname
-  );
+const authenticate = (req, res, next) => {
+  if (!req.session.user) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  next();
+};
+
+// Use `authenticate` middleware for protected routes
+app.get("/user/list", authenticate, async (req, res) => {
+  // WIP
+});
+
+// Login Endpoint
+app.post("/admin/login", async (req, res) => {
+  const { login_name, password } = req.body;
+
+  try {
+    // Look up user by login_name and password
+    const user = await User.findOne({ login_name, password });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid login or password" });
+    }
+
+    // Store user info in session
+    req.session.user = { id: user._id, first_name: user.first_name };
+    res.status(200).json({ user: req.session.user });
+  } catch (err) {
+    res.status(500).json({ message: "Error logging in" });
+  }
+});
+
+app.post("/admin/logout", (req, res) => {
+  if (!req.session.user) {
+    return res.status(400).json({ message: "No user is currently logged in" });
+  }
+
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({ message: "Error logging out" });
+    }
+    res.status(200).json({ message: "Logout successful" });
+  });
 });
 
 app.post("/images/upload", async (request, response) => {
@@ -235,11 +272,25 @@ app.post("/images/upload", async (request, response) => {
     const timestamp = new Date().valueOf();
     const filename = "U" + String(timestamp) + request.file.originalname;
 
-    fs.writeFile("./images/uploaded/" + filename, request.file.buffer, function (err) {
-      if (err) {
-        console.log(`Error writing file: ${err}`);
-        return response.status(500).send("Error saving file");
+    fs.writeFile(
+      "./images/uploaded/" + filename,
+      request.file.buffer,
+      function (err) {
+        if (err) {
+          console.log(`Error writing file: ${err}`);
+          return response.status(500).send("Error saving file");
+        }
       }
-    });
+    );
   });
+});
+
+const server = app.listen(3000, function () {
+  const port = server.address().port;
+  console.log(
+    "Listening at http://localhost:" +
+      port +
+      " exporting the directory " +
+      __dirname
+  );
 });
