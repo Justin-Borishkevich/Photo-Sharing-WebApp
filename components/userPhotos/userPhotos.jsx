@@ -1,5 +1,5 @@
 import React from "react";
-import { Typography, Divider } from "@mui/material";
+import { Typography, Divider, TextField, Button } from "@mui/material";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import "./userPhotos.css";
@@ -9,6 +9,7 @@ class UserPhotos extends React.Component {
     super(props);
     this.state = {
       photos: null,
+      newComments: {}, // Track new comments for each photo by photo ID
     };
   }
 
@@ -17,29 +18,19 @@ class UserPhotos extends React.Component {
     const userId = this.props.match.params.userId;
 
     try {
-      // Step 1: Fetch the photos of the user
       const photoResponse = await axios.get(`/photosOfUser/${userId}`);
       const photos = photoResponse.data;
 
-      // Step 2: Fetch user details for each comment's user._id
       const photosWithUserDetails = await Promise.all(
         photos.map(async (photo) => {
           const commentsWithUsers = await Promise.all(
             photo.comments.map(async (comment) => {
-              // Log the comment's user._id to check if it's undefined
-              console.log(
-                "Fetching user for comment with user._id:",
-                comment.user._id
-              );
-
-              if (comment.user._id) {
+              if (comment.user && comment.user._id) {
                 try {
                   const userResponse = await axios.get(
                     `/user/${comment.user._id}`
                   );
                   const user = userResponse.data;
-
-                  // Attach the fetched user details to the comment
                   return {
                     ...comment,
                     user: {
@@ -53,16 +44,14 @@ class UserPhotos extends React.Component {
                     `Error fetching user with ID ${comment.user._id}:`,
                     error
                   );
-                  return comment; // Return the comment as-is if there's an error fetching the user
+                  return comment;
                 }
               } else {
-                console.error("User ID is undefined for comment:", comment);
-                return comment; // Skip fetching if user._id is undefined
+                return comment;
               }
             })
           );
 
-          // Attach the populated comments to the photo
           return {
             ...photo,
             comments: commentsWithUsers,
@@ -70,15 +59,62 @@ class UserPhotos extends React.Component {
         })
       );
 
-      // Step 3: Update the state with the fully populated photos
       this.setState({ photos: photosWithUserDetails });
     } catch (error) {
       console.error("Error fetching photos:", error);
     }
   }
 
+  handleCommentChange = (photoId, e) => {
+    // Update new comment for a specific photo
+    this.setState((prevState) => ({
+      newComments: {
+        ...prevState.newComments,
+        [photoId]: e.target.value,
+      },
+    }));
+  };
+
+  addComment = async (photoId) => {
+    const { newComments, photos } = this.state;
+    const commentText = newComments[photoId];
+
+    if (!commentText || !commentText.trim()) return;
+
+    try {
+      const response = await axios.post(`/commentsOfPhoto/${photoId}`, {
+        comment: commentText,
+      });
+      const addedComment = response.data;
+
+      // Update the specific photo's comments in the state
+      const updatedPhotos = photos.map((photo) => {
+        if (photo._id === photoId) {
+          return {
+            ...photo,
+            comments: [...photo.comments, addedComment], // Add the new comment to the existing comments
+          };
+        }
+        return photo;
+      });
+
+      this.setState({
+        photos: updatedPhotos,
+        newComments: {
+          ...newComments,
+          [photoId]: "", // Clear the input for this photo after submitting
+        },
+      });
+    } catch (error) {
+      console.error("Failed to add comment:", error);
+      if (error.response && error.response.status === 400) {
+        alert("Comment cannot be empty.");
+      }
+    }
+  };
+
   render() {
-    const { photos } = this.state;
+    const { photos, newComments } = this.state;
 
     if (!photos) {
       return <Typography variant="body1">Loading photos...</Typography>;
@@ -119,6 +155,23 @@ class UserPhotos extends React.Component {
                 ))}
             </div>
             <Divider />
+            <TextField
+              value={newComments[photo._id] || ""}
+              onChange={(e) => this.handleCommentChange(photo._id, e)}
+              placeholder="Add a comment..."
+              variant="outlined"
+              size="small"
+              fullWidth
+              className="comment-input"
+            />
+            <Button
+              onClick={() => this.addComment(photo._id)}
+              variant="contained"
+              color="primary"
+              className="comment-button"
+            >
+              Submit
+            </Button>
           </div>
         ))}
       </div>
