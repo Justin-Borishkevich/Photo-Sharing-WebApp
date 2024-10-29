@@ -19,7 +19,6 @@ class PhotoShare extends React.Component {
     };
     this.userHandler = this.userHandler.bind(this);
     this.setDisplayType = this.setDisplayType.bind(this);
-    this.handleLogout = this.handleLogout.bind(this);
   }
 
   componentDidMount() {
@@ -45,14 +44,10 @@ class PhotoShare extends React.Component {
     }
   }
 
-  async handleLogout() {
-    try {
-      await axios.post("/admin/logout");
-      this.setState({ currentUser: null });
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
-  }
+  // Clear currentUser after logout
+  handleLogout = () => {
+    this.setState({ currentUser: null });
+  };
 
   render() {
     const { currentUser, displayType } = this.state;
@@ -64,7 +59,7 @@ class PhotoShare extends React.Component {
             <Grid item xs={12}>
               <TopBar
                 user={currentUser}
-                onLogout={this.handleLogout}
+                onLogout={this.handleLogout} // This will clear currentUser on logout
                 displayType={displayType}
               />
             </Grid>
@@ -119,3 +114,4 @@ class PhotoShare extends React.Component {
 }
 
 ReactDOM.render(<PhotoShare />, document.getElementById("photoshareapp"));
+
