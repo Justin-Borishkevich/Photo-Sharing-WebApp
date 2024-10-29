@@ -266,6 +266,10 @@ app.post("/images/upload", async (request, response) => {
       return response.status(400).send("File size is 0");
     }
 
+    if(request.session.user === undefined){
+      return response.status(401).send("Unauthorized");
+    }
+
     // We need to create the file in the directory "images" under a unique name.
     // We make the original file name unique by adding a unique prefix with a
     // timestamp.
@@ -273,13 +277,19 @@ app.post("/images/upload", async (request, response) => {
     const filename = "U" + String(timestamp) + request.file.originalname;
 
     fs.writeFile(
-      "./images/uploaded/" + filename,
+      "./images/" + filename,
       request.file.buffer,
       function (err) {
         if (err) {
           console.log(`Error writing file: ${err}`);
           return response.status(500).send("Error saving file");
         }
+        Photo.create({
+          file_name: filename,
+          date_time: timestamp,
+          user_id: request.session.user.id,
+        })
+
       }
     );
   });
