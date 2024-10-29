@@ -19,7 +19,6 @@ class PhotoShare extends React.Component {
     };
     this.userHandler = this.userHandler.bind(this);
     this.setDisplayType = this.setDisplayType.bind(this);
-    this.handleLogin = this.handleLogin.bind(this);
     this.handleLogout = this.handleLogout.bind(this);
   }
 
@@ -43,17 +42,6 @@ class PhotoShare extends React.Component {
   setDisplayType(displayType) {
     if (this.state.displayType !== displayType) {
       this.setState({ displayType: displayType });
-    }
-  }
-
-  async handleLogin(user) {
-    try {
-      const response = await axios.post("/admin/login", {
-        login_name: user.login_name,
-      });
-      this.setState({ currentUser: response.data.user });
-    } catch (err) {
-      console.error("Login failed:", err);
     }
   }
 
@@ -119,7 +107,7 @@ class PhotoShare extends React.Component {
                     <Redirect to="/users" />
                   </Switch>
                 ) : (
-                  <LoginRegister onLogin={this.handleLogin} />
+                  <LoginRegister onLogin={this.userHandler} />
                 )}
               </Paper>
             </Grid>

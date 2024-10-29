@@ -217,15 +217,15 @@ app.post("/admin/login", async (req, res) => {
   try {
     // Look up user by login_name and password
     const user = await User.findOne({ login_name, password });
-    if (!user) {
-      return res.status(400).json({ message: "Invalid login or password" });
-    }
+    // if (!user) {
+    //   return res.status(400).json({ message: {login_name, password} });
+    // }
 
     // Store user info in session
     req.session.user = { id: user._id, first_name: user.first_name };
     res.status(200).json({ user: req.session.user });
   } catch (err) {
-    res.status(500).json({ message: "Error logging in" });
+    res.status(500).json({ message: err.message });
   }
 });
 
