@@ -65,7 +65,7 @@ class TopBar extends React.Component {
   };
 
   render() {
-    const { user } = this.props; // `user` comes from App component
+    const { user } = this.props;
     return (
       <Box sx={{ flexGrow: 1 }}>
         <AppBar className="topbar-appBar">
