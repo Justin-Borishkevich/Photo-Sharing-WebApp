@@ -1,6 +1,6 @@
 import React from "react";
-import { AppBar, Toolbar, Typography, Box } from "@mui/material";
-import axios from "axios"; // Replace fetchModel import
+import { AppBar, Toolbar, Typography, Box, Button } from "@mui/material";
+import axios from "axios";
 import "./TopBar.css";
 
 class TopBar extends React.Component {
@@ -41,14 +41,51 @@ class TopBar extends React.Component {
     return "Please Select a User";
   }
 
+  handleUploadButtonClicked = (e) => {
+    e.preventDefault();
+    if (this.uploadInput.files.length > 0) {
+      const domForm = new FormData();
+      domForm.append("uploadedphoto", this.uploadInput.files[0]);
+      axios
+        .post("/images/upload", domForm)
+        .then((res) => {
+          console.log(res);
+        })
+        .catch((err) => console.log(`POST ERR: ${err}`));
+    }
+  };
+
+  handleLogout = async () => {
+    try {
+      await axios.post("/admin/logout");
+      this.props.onLogout(); // Clear user in the parent component
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
+  };
+
   render() {
+    const { user } = this.props; // `user` comes from App component
     return (
       <Box sx={{ flexGrow: 1 }}>
         <AppBar className="topbar-appBar">
           <Toolbar>
             <Typography variant="h5" color="inherit" sx={{ flexGrow: 1 }}>
-              Current User: Group 8
+              {user ? `Hi, ${user.first_name}` : "Please Login"}
             </Typography>
+            {user && (
+              <Button color="inherit" onClick={this.handleLogout}>
+                Logout
+              </Button>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              ref={(domFileRef) => {
+                this.uploadInput = domFileRef;
+              }}
+            />
+            <button onClick={this.handleUploadButtonClicked}>Upload</button>
             <Typography variant="h5" color="inherit">
               {this.displayContextToText()}
             </Typography>

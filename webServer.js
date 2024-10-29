@@ -44,6 +44,19 @@ const User = require("./schema/user.js");
 const Photo = require("./schema/photo.js");
 const SchemaInfo = require("./schema/schemaInfo.js");
 
+const session = require("express-session");
+const bodyParser = require("body-parser");
+const multer = require("multer");
+app.use(
+  session({ secret: "secretKey", resave: false, saveUninitialized: false })
+);
+app.use(bodyParser.json());
+const processFormBody = multer({ storage: multer.memoryStorage() }).single(
+  "uploadedphoto"
+);
+const fs = require("fs");
+const { time } = require("console");
+
 // XXX - Your submission should work without this line. Comment out or delete
 // this line for tests and before submission!
 // const models = require("./modelData/photoApp.js").models;
@@ -183,6 +196,93 @@ app.get("/photosOfUser/:id", async (req, res) => {
     console.error("Error fetching photos:", err); // Log the error to debug
     res.status(500).send("Error fetching photos");
   }
+});
+
+const authenticate = (req, res, next) => {
+  if (!req.session.user) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  next();
+};
+
+// Use `authenticate` middleware for protected routes
+app.get("/user/list", authenticate, async (req, res) => {
+  // WIP
+});
+
+// Login Endpoint
+app.post("/admin/login", async (req, res) => {
+  const { login_name, password } = req.body;
+
+  try {
+    // Look up user by login_name and password
+    const user = await User.findOne({ login_name, password });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid login or password" });
+    }
+
+    // Store user info in session
+    req.session.user = { id: user._id, first_name: user.first_name };
+    res.status(200).json({ user: req.session.user });
+  } catch (err) {
+    res.status(500).json({ message: "Error logging in" });
+  }
+});
+
+app.post("/admin/logout", (req, res) => {
+  if (!req.session.user) {
+    return res.status(400).json({ message: "No user is currently logged in" });
+  }
+
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({ message: "Error logging out" });
+    }
+    res.status(200).json({ message: "Logout successful" });
+  });
+});
+
+app.post("/images/upload", async (request, response) => {
+  processFormBody(request, response, function (err) {
+    if (err || !request.file) {
+      console.log(`Error: ${err}`);
+      return response.status(400).send("Error uploading file");
+    }
+    // request.file has the following properties of interest:
+    //   fieldname    - Should be 'uploadedphoto' since that is what we sent
+    //   originalname - The name of the file the user uploaded
+    //   mimetype     - The mimetype of the image (e.g., 'image/jpeg',
+    //                  'image/png')
+    //   buffer       - A node Buffer containing the contents of the file
+    //   size         - The size of the file in bytes
+
+    // XXX - Do some validation here.
+    if (request.file.fieldname !== "uploadedphoto") {
+      console.log("Fieldname is not uploadedphoto");
+      return response.status(400).send("Invalid fieldname");
+    }
+    if (request.file.size === 0) {
+      console.log("File size is 0");
+      return response.status(400).send("File size is 0");
+    }
+
+    // We need to create the file in the directory "images" under a unique name.
+    // We make the original file name unique by adding a unique prefix with a
+    // timestamp.
+    const timestamp = new Date().valueOf();
+    const filename = "U" + String(timestamp) + request.file.originalname;
+
+    fs.writeFile(
+      "./images/uploaded/" + filename,
+      request.file.buffer,
+      function (err) {
+        if (err) {
+          console.log(`Error writing file: ${err}`);
+          return response.status(500).send("Error saving file");
+        }
+      }
+    );
+  });
 });
 
 const server = app.listen(3000, function () {
