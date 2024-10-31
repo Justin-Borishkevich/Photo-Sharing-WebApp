@@ -77,7 +77,7 @@ class UserPhotos extends React.Component {
     const commentText = this.state.newComment[photoId];
 
     console.log("Adding comment:", commentText);
-    //if (!commentText || !commentText.trim()) return;
+    if (!commentText || !commentText.trim()) return;
 
     try {
       const response = await axios.post(`/commentsOfPhoto/${photoId}`, {
