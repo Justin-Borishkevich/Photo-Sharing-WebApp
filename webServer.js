@@ -42,6 +42,7 @@ const app = express();
 // Load the Mongoose schema for User, Photo, and SchemaInfo
 const User = require("./schema/user.js");
 const Photo = require("./schema/photo.js");
+const Comment= require("./schema/comment.js");
 const SchemaInfo = require("./schema/schemaInfo.js");
 
 const session = require("express-session");
@@ -289,9 +290,47 @@ app.post("/images/upload", async (request, response) => {
           date_time: timestamp,
           user_id: request.session.user.id,
         })
-
+        return response.status(200).send("File uploaded successfully");
       }
     );
+  });
+});
+
+app.post("/commentsOfPhoto/:photo_id", async (request, response) =>{
+  processFormBody(request, response, async function (err) {
+    if (err || !request) {
+      console.log(`Error: ${err}`);
+      return response.status(400).send("Add comment failed");
+    }
+
+    if(request.session.user === undefined){
+      return response.status(401).send("Unauthorized");
+    }
+
+    
+
+    const timestamp = new Date().valueOf();
+    const photoID = request.params.photo_id;
+    console.log("photoID: ", photoID);
+    console.log("request.body.comment: ", request.body.comment);
+    const newComment = await Comment.create({
+      comment: request.body.comment,
+      date_time: timestamp,
+      user_id: request.session.user.id,
+    });
+    console.log("Comment: ", newComment);
+
+    const photo = await Photo.findById(photoID).exec();
+    if (!photo) {
+      return response.status(400).send("Photo not found");
+    }
+
+    photo.comments.push(newComment);
+    await photo.save();
+
+    console.log("newComments: ", photo.comments);
+    return response.status(200).send("Comment added successfully");
+    
   });
 });
 

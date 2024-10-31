@@ -8,8 +8,8 @@ class UserPhotos extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      photos: null,
-      newComments: {}, // Track new comments for each photo by photo ID
+      photos: [],
+      newComment:[], // Initialize newComments in the state
     };
   }
 
@@ -20,7 +20,6 @@ class UserPhotos extends React.Component {
     try {
       const photoResponse = await axios.get(`/photosOfUser/${userId}`);
       const photos = photoResponse.data;
-
       const photosWithUserDetails = await Promise.all(
         photos.map(async (photo) => {
           const commentsWithUsers = await Promise.all(
@@ -67,54 +66,34 @@ class UserPhotos extends React.Component {
 
   handleCommentChange = (photoId, e) => {
     // Update new comment for a specific photo
-    this.setState((prevState) => ({
-      newComments: {
-        ...prevState.newComments,
-        [photoId]: e.target.value,
-      },
-    }));
+    this.setState((prevState) => {
+      const newComment = [...prevState.newComment];
+      newComment[photoId] = e.target.value;
+      return { newComment };
+    });
   };
 
   addComment = async (photoId) => {
-    const { newComments, photos } = this.state;
-    const commentText = newComments[photoId];
+    const commentText = this.state.newComment[photoId];
 
-    if (!commentText || !commentText.trim()) return;
+    console.log("Adding comment:", commentText);
+    //if (!commentText || !commentText.trim()) return;
 
     try {
       const response = await axios.post(`/commentsOfPhoto/${photoId}`, {
         comment: commentText,
       });
-      const addedComment = response.data;
-
-      // Update the specific photo's comments in the state
-      const updatedPhotos = photos.map((photo) => {
-        if (photo._id === photoId) {
-          return {
-            ...photo,
-            comments: [...photo.comments, addedComment], // Add the new comment to the existing comments
-          };
-        }
-        return photo;
-      });
-
+      this.componentDidMount(); // Refresh the comments after adding
       this.setState({
-        photos: updatedPhotos,
-        newComments: {
-          ...newComments,
-          [photoId]: "", // Clear the input for this photo after submitting
-        },
+        newComment: "", // Clear the new comment after adding
       });
     } catch (error) {
-      console.error("Failed to add comment:", error);
-      if (error.response && error.response.status === 400) {
-        alert("Comment cannot be empty.");
-      }
+      console.error("Error adding comment:", error);
     }
   };
 
   render() {
-    const { photos, newComments } = this.state;
+    const { photos } = this.state;
 
     if (!photos) {
       return <Typography variant="body1">Loading photos...</Typography>;
@@ -156,7 +135,7 @@ class UserPhotos extends React.Component {
             </div>
             <Divider />
             <TextField
-              value={newComments[photo._id] || ""}
+              value={this.state.newComment[photo._id] || ''}
               onChange={(e) => this.handleCommentChange(photo._id, e)}
               placeholder="Add a comment..."
               variant="outlined"
