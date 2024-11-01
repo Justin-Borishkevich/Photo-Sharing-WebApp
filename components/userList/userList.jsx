@@ -26,7 +26,10 @@ class UserList extends React.Component {
             <Button
               component={Link}
               to={`/users/${user._id}`}
-              onClick={() => this.props.userHandler(user._id)}
+              onClick={() => {
+                console.log("Setting selected user:", user);
+                this.props.userHandler(user);
+              }}
             >
               {user.first_name} {user.last_name}
             </Button>

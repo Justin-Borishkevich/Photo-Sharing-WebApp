@@ -1,12 +1,37 @@
 .topbar-appBar {
-  height: 60;
-  justify-content: 'center';
-  display: block;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  background-color: #333;
 }
 
+.topbar-toolbar {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
 
-.what{
-  color: blue;
-  align-items: right  ;
+.topbar-section-left,
+.topbar-section-center,
+.topbar-section-right {
+  display: flex;
+  align-items: center;
+}
+
+.topbar-section-center {
+  margin: 0 20px;
+}
+
+.topbar-upload-input {
+  margin-right: 10px;
+}
+
+.topbar-upload-button {
+  background-color: #007bff;
+  color: white;
+}
+
+.topbar-section-right {
   text-align: right;
 }

@@ -22,16 +22,11 @@ class TopBar extends React.Component {
     });
   }
 
-  userIDtoName() {
-    const id = this.props.currentUser;
-    const user = this.state.users.find((u) => u._id === id);
-    return user
-      ? `${user.first_name} ${user.last_name}`
-      : "Please Select a User";
-  }
-
   displayContextToText() {
-    const userName = this.userIDtoName();
+    const selectedUser = this.props.selectedUser;
+    const userName = selectedUser
+      ? `${selectedUser.first_name} ${selectedUser.last_name}`
+      : "Please Select a User";
     if (this.props.displayType === 0) {
       return `User Details of ${userName}`;
     }
@@ -69,33 +64,44 @@ class TopBar extends React.Component {
     return (
       <Box sx={{ flexGrow: 1 }}>
         <AppBar className="topbar-appBar">
-          <Toolbar>
-            <Typography variant="h5" color="inherit" sx={{ flexGrow: 1 }}>
-              {user ? `Hi, ${user.first_name}` : "Please Login"}
-            </Typography>
-            {user && (
-              <Button color="inherit" onClick={this.handleLogout}>
-                Logout
+          <Toolbar className="topbar-toolbar">
+            <Box className="topbar-section-left">
+              <Typography variant="h5" color="inherit" sx={{ flexGrow: 1 }}>
+                {user ? `Hi, ${user.first_name}` : "Please Login"}
+              </Typography>
+              {user && (
+                <Button color="inherit" onClick={this.handleLogout}>
+                  Logout
+                </Button>
+              )}
+            </Box>
+
+            <Box className="topbar-section-center">
+              <input
+                type="file"
+                accept="image/*"
+                ref={(domFileRef) => {
+                  this.uploadInput = domFileRef;
+                }}
+                className="topbar-upload-input"
+              />
+              <Button
+                onClick={this.handleUploadButtonClicked}
+                className="topbar-upload-button"
+                color="inherit"
+              >
+                Upload
               </Button>
-            )}
-            <input
-              type="file"
-              accept="image/*"
-              ref={(domFileRef) => {
-                this.uploadInput = domFileRef;
-              }}
-            />
-            <button onClick={this.handleUploadButtonClicked}>Upload</button>
-            <Typography variant="h5" color="inherit">
-              {this.displayContextToText()}
-            </Typography>
-            <Typography
-              variant="caption"
-              color="inherit"
-              sx={{ marginLeft: 2 }}
-            >
-              Version: {this.state.version}
-            </Typography>
+            </Box>
+
+            <Box className="topbar-section-right">
+              <Typography variant="h5" color="inherit">
+                {this.displayContextToText()}
+              </Typography>
+              <Typography variant="caption" color="inherit">
+                Version: {this.state.version}
+              </Typography>
+            </Box>
           </Toolbar>
         </AppBar>
       </Box>

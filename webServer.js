@@ -42,7 +42,7 @@ const app = express();
 // Load the Mongoose schema for User, Photo, and SchemaInfo
 const User = require("./schema/user.js");
 const Photo = require("./schema/photo.js");
-const Comment= require("./schema/comment.js");
+const Comment = require("./schema/comment.js");
 const SchemaInfo = require("./schema/schemaInfo.js");
 
 const session = require("express-session");
@@ -163,6 +163,9 @@ app.get("/user/:id", async (req, res) => {
  * URL /photosOfUser/:id - Returns the Photos for User (id).
  */
 app.get("/photosOfUser/:id", async (req, res) => {
+  if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+    return res.status(400).send("Invalid ID format");
+  }
   try {
     // Find the photos for the given user_id and populate user info in the comments' user_id field
     const photos = await Photo.find({ user_id: req.params.id }).populate({
@@ -208,25 +211,84 @@ const authenticate = (req, res, next) => {
 
 // Use `authenticate` middleware for protected routes
 app.get("/user/list", authenticate, async (req, res) => {
-  // WIP
+  // Now protected by session authentication
+  try {
+    const users = await User.find({}, "_id first_name last_name");
+    res.status(200).json(users);
+  } catch (err) {
+    console.error("Error fetching user list:", err);
+    res.status(500).send("Error fetching user list");
+  }
 });
 
-// Login Endpoint
+// Add the /user registration endpoint
+app.post("/user", async (req, res) => {
+  const {
+    login_name,
+    password,
+    first_name,
+    last_name,
+    location,
+    description,
+    occupation,
+  } = req.body;
+
+  // Validate required fields
+  if (!login_name || !password || !first_name || !last_name) {
+    return res.status(400).send("Missing required fields.");
+  }
+
+  try {
+    // Check if the user already exists
+    const existingUser = await User.findOne({ login_name });
+    if (existingUser) {
+      return res.status(400).send("User with this login name already exists.");
+    }
+
+    // Create and save the new user
+    const newUser = new User({
+      login_name,
+      password, // Note: Storing plaintext password here; update this in final implementation
+      first_name,
+      last_name,
+      location,
+      description,
+      occupation,
+    });
+
+    await newUser.save();
+    res.status(201).send("User registered successfully.");
+  } catch (error) {
+    console.error("Error in /user registration:", error);
+    res.status(500).send("Failed to register user.");
+  }
+});
+
+// Update the /admin/login endpoint to return specific error messages
 app.post("/admin/login", async (req, res) => {
   const { login_name, password } = req.body;
 
-  try {
-    // Look up user by login_name and password
-    const user = await User.findOne({ login_name, password });
-    // if (!user) {
-    //   return res.status(400).json({ message: {login_name, password} });
-    // }
+  if (!login_name || !password) {
+    return res
+      .status(400)
+      .json({ message: "Login name and password are required." });
+  }
 
-    // Store user info in session
+  try {
+    // Find the user by login name and password
+    const user = await User.findOne({ login_name, password });
+    if (!user) {
+      return res
+        .status(400)
+        .json({ message: "Invalid login name or password." });
+    }
+
+    // Store the user session
     req.session.user = { id: user._id, first_name: user.first_name };
     res.status(200).json({ user: req.session.user });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+  } catch (error) {
+    console.error("Error in /admin/login:", error);
+    res.status(500).json({ message: "Login failed. Please try again." });
   }
 });
 
@@ -267,7 +329,7 @@ app.post("/images/upload", async (request, response) => {
       return response.status(400).send("File size is 0");
     }
 
-    if(request.session.user === undefined){
+    if (request.session.user === undefined) {
       return response.status(401).send("Unauthorized");
     }
 
@@ -277,37 +339,31 @@ app.post("/images/upload", async (request, response) => {
     const timestamp = new Date().valueOf();
     const filename = "U" + String(timestamp) + request.file.originalname;
 
-    fs.writeFile(
-      "./images/" + filename,
-      request.file.buffer,
-      function (err) {
-        if (err) {
-          console.log(`Error writing file: ${err}`);
-          return response.status(500).send("Error saving file");
-        }
-        Photo.create({
-          file_name: filename,
-          date_time: timestamp,
-          user_id: request.session.user.id,
-        })
-        return response.status(200).send("File uploaded successfully");
+    fs.writeFile("./images/" + filename, request.file.buffer, function (err) {
+      if (err) {
+        console.log(`Error writing file: ${err}`);
+        return response.status(500).send("Error saving file");
       }
-    );
+      Photo.create({
+        file_name: filename,
+        date_time: timestamp,
+        user_id: request.session.user.id,
+      });
+      return response.status(200).send("File uploaded successfully");
+    });
   });
 });
 
-app.post("/commentsOfPhoto/:photo_id", async (request, response) =>{
+app.post("/commentsOfPhoto/:photo_id", async (request, response) => {
   processFormBody(request, response, async function (err) {
     if (err || !request) {
       console.log(`Error: ${err}`);
       return response.status(400).send("Add comment failed");
     }
 
-    if(request.session.user === undefined){
+    if (request.session.user === undefined) {
       return response.status(401).send("Unauthorized");
     }
-
-    
 
     const timestamp = new Date().valueOf();
     const photoID = request.params.photo_id;
@@ -330,7 +386,6 @@ app.post("/commentsOfPhoto/:photo_id", async (request, response) =>{
 
     console.log("newComments: ", photo.comments);
     return response.status(200).send("Comment added successfully");
-    
   });
 });
 

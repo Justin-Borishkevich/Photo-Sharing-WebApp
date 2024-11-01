@@ -14,28 +14,23 @@ class PhotoShare extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      currentUser: null,
+      loggedInUser: null,
+      selectedUser: null,
       displayType: null,
     };
+    this.handleLogin = this.handleLogin.bind(this);
     this.userHandler = this.userHandler.bind(this);
     this.setDisplayType = this.setDisplayType.bind(this);
   }
 
-  componentDidMount() {
-    this.checkSession();
+  // Handle login and store the logged-in user
+  handleLogin(user) {
+    this.setState({ loggedInUser: user });
   }
 
-  async checkSession() {
-    try {
-      const response = await axios.get("/user/current");
-      this.setState({ currentUser: response.data.user });
-    } catch {
-      this.setState({ currentUser: null });
-    }
-  }
-
+  // Handle user selection from UserList
   userHandler(user) {
-    this.setState({ currentUser: user });
+    this.setState({ selectedUser: user });
   }
 
   setDisplayType(displayType) {
@@ -44,13 +39,13 @@ class PhotoShare extends React.Component {
     }
   }
 
-  // Clear currentUser after logout
+  // Clear loggedInUser after logout
   handleLogout = () => {
-    this.setState({ currentUser: null });
+    this.setState({ loggedInUser: null, selectedUser: null });
   };
 
   render() {
-    const { currentUser, displayType } = this.state;
+    const { loggedInUser, selectedUser, displayType } = this.state;
 
     return (
       <HashRouter>
@@ -58,8 +53,9 @@ class PhotoShare extends React.Component {
           <Grid container spacing={8}>
             <Grid item xs={12}>
               <TopBar
-                user={currentUser}
-                onLogout={this.handleLogout} // This will clear currentUser on logout
+                user={loggedInUser}
+                selectedUser={selectedUser}
+                onLogout={this.handleLogout} // This will clear loggedInUser on logout
                 displayType={displayType}
               />
             </Grid>
@@ -67,7 +63,7 @@ class PhotoShare extends React.Component {
 
             <Grid item sm={3}>
               <Paper className="main-grid-item">
-                {currentUser ? (
+                {loggedInUser ? (
                   <UserList userHandler={this.userHandler} />
                 ) : (
                   <h2>Please log in to see the user list.</h2>
@@ -77,7 +73,7 @@ class PhotoShare extends React.Component {
 
             <Grid item sm={9}>
               <Paper className="main-grid-item">
-                {currentUser ? (
+                {loggedInUser ? (
                   <Switch>
                     <Route
                       path="/users/:userId"
@@ -88,7 +84,6 @@ class PhotoShare extends React.Component {
                         />
                       )}
                     />
-
                     <Route
                       path="/photos/:userId"
                       render={(props) => (
@@ -102,7 +97,7 @@ class PhotoShare extends React.Component {
                     <Redirect to="/users" />
                   </Switch>
                 ) : (
-                  <LoginRegister onLogin={this.userHandler} />
+                  <LoginRegister onLogin={this.handleLogin} />
                 )}
               </Paper>
             </Grid>
@@ -114,4 +109,3 @@ class PhotoShare extends React.Component {
 }
 
 ReactDOM.render(<PhotoShare />, document.getElementById("photoshareapp"));
-
