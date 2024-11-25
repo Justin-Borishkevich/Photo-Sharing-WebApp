@@ -2,7 +2,6 @@ import React from "react";
 import ReactDOM from "react-dom";
 import { HashRouter, Route, Switch, Redirect } from "react-router-dom";
 import { Grid, Paper } from "@mui/material";
-import axios from "axios";
 import "./styles/main.css";
 import TopBar from "./components/topBar/TopBar";
 import UserDetail from "./components/userDetail/userDetail";

@@ -7,6 +7,7 @@ class TopBar extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      //eslint-disable-next-line -- the empty array is intentional
       users: [],
       version: "",
     };
@@ -14,6 +15,7 @@ class TopBar extends React.Component {
 
   componentDidMount() {
     axios.get("/user/list").then((response) => {
+      //eslint-disable-next-line -- the "unused" users variable is populated and used here
       this.setState({ users: response.data });
     });
 

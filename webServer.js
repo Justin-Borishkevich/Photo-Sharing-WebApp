@@ -58,6 +58,24 @@ const processFormBody = multer({ storage: multer.memoryStorage() }).single(
 const fs = require("fs");
 const { time } = require("console");
 
+const crypto = require("crypto");
+
+// Function to hash a password
+function hashPassword(password) {
+  const salt = crypto.randomBytes(16).toString("hex"); // Generate a 16-byte random salt
+  const hash = crypto
+    .pbkdf2Sync(password, salt, 10000, 64, "sha512")
+    .toString("hex"); // Hash the password with the salt
+  return { salt, hash };
+}
+
+const verifyPassword = (password, hash, salt) => {
+  const hashToCompare = crypto
+    .pbkdf2Sync(password, salt, 10000, 64, "sha512")
+    .toString("hex");
+  return hash === hashToCompare;
+};
+
 // XXX - Your submission should work without this line. Comment out or delete
 // this line for tests and before submission!
 // const models = require("./modelData/photoApp.js").models;
@@ -221,7 +239,7 @@ app.get("/user/list", authenticate, async (req, res) => {
   }
 });
 
-// Add the /user registration endpoint
+// User registration endpoint
 app.post("/user", async (req, res) => {
   const {
     login_name,
@@ -233,22 +251,21 @@ app.post("/user", async (req, res) => {
     occupation,
   } = req.body;
 
-  // Validate required fields
   if (!login_name || !password || !first_name || !last_name) {
     return res.status(400).send("Missing required fields.");
   }
 
   try {
-    // Check if the user already exists
     const existingUser = await User.findOne({ login_name });
     if (existingUser) {
       return res.status(400).send("User with this login name already exists.");
     }
 
-    // Create and save the new user
+    const { salt, hash } = hashPassword(password); // Hash the password with salt
     const newUser = new User({
       login_name,
-      password, // Note: Storing plaintext password here; update this in final implementation
+      salt, // Store the salt
+      password: hash, // Store the hashed password
       first_name,
       last_name,
       location,
@@ -264,7 +281,7 @@ app.post("/user", async (req, res) => {
   }
 });
 
-// Update the /admin/login endpoint to return specific error messages
+// Login endpoint
 app.post("/admin/login", async (req, res) => {
   const { login_name, password } = req.body;
 
@@ -275,15 +292,20 @@ app.post("/admin/login", async (req, res) => {
   }
 
   try {
-    // Find the user by login name and password
-    const user = await User.findOne({ login_name, password });
+    const user = await User.findOne({ login_name });
     if (!user) {
       return res
         .status(400)
         .json({ message: "Invalid login name or password." });
     }
 
-    // Store the user session
+    const isMatch = verifyPassword(password, user.password, user.salt); // Verify password
+    if (!isMatch) {
+      return res
+        .status(400)
+        .json({ message: "Invalid login name or password." });
+    }
+
     req.session.user = { id: user._id, first_name: user.first_name };
     res.status(200).json({ user: req.session.user });
   } catch (error) {

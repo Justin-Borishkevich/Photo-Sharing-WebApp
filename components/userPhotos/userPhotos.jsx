@@ -9,7 +9,7 @@ class UserPhotos extends React.Component {
     super(props);
     this.state = {
       photos: [],
-      newComment:[], // Initialize newComments in the state
+      newComment: [], // Initialize newComments in the state
     };
   }
 
@@ -80,6 +80,7 @@ class UserPhotos extends React.Component {
     if (!commentText || !commentText.trim()) return;
 
     try {
+      //eslint-disable-next-line -- axios.post
       const response = await axios.post(`/commentsOfPhoto/${photoId}`, {
         comment: commentText,
       });
@@ -135,7 +136,7 @@ class UserPhotos extends React.Component {
             </div>
             <Divider />
             <TextField
-              value={this.state.newComment[photo._id] || ''}
+              value={this.state.newComment[photo._id] || ""}
               onChange={(e) => this.handleCommentChange(photo._id, e)}
               placeholder="Add a comment..."
               variant="outlined"
