@@ -58,24 +58,6 @@ const processFormBody = multer({ storage: multer.memoryStorage() }).single(
 const fs = require("fs");
 const { time } = require("console");
 
-const crypto = require("crypto");
-
-// Function to hash a password
-function hashPassword(password) {
-  const salt = crypto.randomBytes(16).toString("hex"); // Generate a 16-byte random salt
-  const hash = crypto
-    .pbkdf2Sync(password, salt, 10000, 64, "sha512")
-    .toString("hex"); // Hash the password with the salt
-  return { salt, hash };
-}
-
-const verifyPassword = (password, hash, salt) => {
-  const hashToCompare = crypto
-    .pbkdf2Sync(password, salt, 10000, 64, "sha512")
-    .toString("hex");
-  return hash === hashToCompare;
-};
-
 // XXX - Your submission should work without this line. Comment out or delete
 // this line for tests and before submission!
 // const models = require("./modelData/photoApp.js").models;
@@ -239,7 +221,8 @@ app.get("/user/list", authenticate, async (req, res) => {
   }
 });
 
-// User registration endpoint
+const { makePasswordEntry } = require("./password");
+
 app.post("/user", async (req, res) => {
   const {
     login_name,
@@ -261,11 +244,12 @@ app.post("/user", async (req, res) => {
       return res.status(400).send("User with this login name already exists.");
     }
 
-    const { salt, hash } = hashPassword(password); // Hash the password with salt
+    const { salt, hash } = makePasswordEntry(password); // Create a hashed password entry
+
     const newUser = new User({
       login_name,
-      salt, // Store the salt
-      password: hash, // Store the hashed password
+      password_digest: hash,
+      salt,
       first_name,
       last_name,
       location,
@@ -281,7 +265,8 @@ app.post("/user", async (req, res) => {
   }
 });
 
-// Login endpoint
+const { verifyPassword } = require("./password");
+
 app.post("/admin/login", async (req, res) => {
   const { login_name, password } = req.body;
 
@@ -299,7 +284,7 @@ app.post("/admin/login", async (req, res) => {
         .json({ message: "Invalid login name or password." });
     }
 
-    const isMatch = verifyPassword(password, user.password, user.salt); // Verify password
+    const isMatch = verifyPassword(user.password_digest, user.salt, password); // Verify password
     if (!isMatch) {
       return res
         .status(400)

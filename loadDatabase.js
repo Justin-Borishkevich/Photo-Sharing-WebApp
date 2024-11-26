@@ -52,8 +52,10 @@ Promise.all(removePromises)
     // Load users into the database
     const userModels = models.userListModel();
     const mapFakeId2RealId = {};
+    const { makePasswordEntry } = require("./password");
+
     const userPromises = userModels.map(function (user) {
-      const { salt, hash } = hashPassword("weak"); // Hash the password
+      const { salt, hash } = makePasswordEntry("weak"); // Generate a salted hash
 
       return User.create({
         first_name: user.first_name,
@@ -62,8 +64,8 @@ Promise.all(removePromises)
         description: user.description,
         occupation: user.occupation,
         login_name: user.last_name.toLowerCase(),
-        password: hash, // Store hashed password
-        salt, // Store the salt
+        password_digest: hash,
+        salt,
       })
         .then(function (userObj) {
           userObj.save();

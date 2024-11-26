@@ -6,8 +6,8 @@ const userSchema = new mongoose.Schema({
   first_name: { type: String, required: true },
   last_name: { type: String, required: true },
   login_name: { type: String, required: true, unique: true },
-  password: { type: String, required: true }, // Hashed password
-  salt: { type: String, required: true }, // Salt for password hashing
+  password_digest: { type: String, required: true },
+  salt: { type: String, required: true },
   location: { type: String },
   description: { type: String },
   occupation: { type: String },
