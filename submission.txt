@@ -51,7 +51,8 @@ app from a new machine):
 *
 * Total Story Points: 6
 *
-* Marketing Video URL (ensure permissions are set to public viewing):
+* Marketing Video URL (ensure permissions are set to public viewing): https://youtu.be/XZUWBjg2vig
+* Note - The demo for a new user being added to the DB showed did not refresh to show the new user, however the document number does show an increase from 6 to 7 when the new user is registered. The new user was added and showed up after the recording finished
 * 
 * Is it OK if we post your Marketing Video URL on the class discussion forum?
 * [Yes/No] - Yes
